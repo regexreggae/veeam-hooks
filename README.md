@@ -9,102 +9,77 @@ Dumps can optionally be compressed, validated and rotated.
 
 ---
 
-# Repository Contents
-
-
-veeam-pre-freeze-mariadb.sh
-veeam-post-thaw-mariadb.sh
-config/veeam-mariadb-backup.conf.example
-
-
----
-
 # Installation
 
 Create the target directories on the host:
 
-```bash
+```
 sudo mkdir -p /opt/veeam-hooks/config
 sudo mkdir -p /opt/veeam-hooks/secrets
 sudo mkdir -p /opt/veeam-hooks/state
-
+```
 Copy the scripts:
-
+```
 sudo cp veeam-pre-freeze-mariadb.sh /opt/veeam-hooks/
 sudo cp veeam-post-thaw-mariadb.sh /opt/veeam-hooks/
-
+```
 Set permissions:
-
+```
 sudo chmod 750 /opt/veeam-hooks/*.sh
 sudo chown root:root /opt/veeam-hooks/*.sh
-Configuration
+```
+# Configuration
 
-Create the config file:
+Create the config file: just rename `config/veeam-mariadb-backup.conf.example` to `config/veeam-mariadb-backup.conf` and insert your values.
 
-/opt/veeam-hooks/config/veeam-mariadb-backup.conf
+Create the password file: just rename `secrets/mariadb_backup_password.example` to `secrets/mariadb_backup_password` and insert your value.
 
-Example:
-
-DB_CONTAINER_NAME="it-blog_db_1"
-DB_NAME="wp-blog"
-DB_USER="backupuser"
-DB_PASSWORD_FILE="/opt/veeam-hooks/secrets/mariadb_backup_password"
-
-BACKUP_DIR="/srv/backups/mariadb"
-STATE_DIR="/opt/veeam-hooks/state"
-
-RETENTION_DAYS="14"
-COMPRESS_DUMP="yes"
-
-FREEZE_MOUNT=""
-
-Create the password file:
-
-/opt/veeam-hooks/secrets/mariadb_backup_password
-
-Example content:
-
-example_password
-
-Set permissions:
-
+Set permissions so only root can read:
+```
 sudo chmod 600 /opt/veeam-hooks/config/veeam-mariadb-backup.conf
 sudo chmod 600 /opt/veeam-hooks/secrets/mariadb_backup_password
-Veeam Configuration
+```
+# Veeam Configuration
 
 In the VM backup job:
 
 Enable Guest Processing and configure:
 
 Pre-freeze script:
-/opt/veeam-hooks/veeam-pre-freeze-mariadb.sh
+use the `/opt/veeam-hooks/veeam-pre-freeze-mariadb.sh` script
 
 Post-thaw script:
-/opt/veeam-hooks/veeam-post-thaw-mariadb.sh
-Logs
+use the `/opt/veeam-hooks/veeam-post-thaw-mariadb.sh` script
+
+Make sure Veeam connects to your machine as root!
+
+# Logs
 
 Scripts log to systemd journal.
 
-Example:
-
+Example for how to check these logs:
+```
 journalctl -t veeam-pre-freeze-mariadb
 journalctl -t veeam-post-thaw-mariadb
-Manual Test
+```
+# Manual Test
 
 Run manually:
-
+```
 sudo /opt/veeam-hooks/veeam-pre-freeze-mariadb.sh
-
+```
 Check dump directory:
-
+```
 ls -lah /srv/backups/mariadb
-Restore Example
+```
+# Restoring from dump
 
-Example restoring a dump:
-
+Example restoring an entire dump:
+```
 gunzip -c mariadb_dump_<timestamp>.sql.gz \
-| docker exec -i <container> mariadb -u root -p
-Notes
+| docker exec -e MYSQL_PWD='<root-db-pw>' -i <container> mariadb -u root
+```
+# Notes
 
-fsfreeze is optional and disabled by default.
+`fsfreeze` is optional and disabled by default.
 If used, it should normally target a dedicated mountpoint.
