@@ -1,0 +1,12 @@
+DB_CONTAINER_NAME="your-container-name"
+DB_NAME="your-db-name"
+DB_USER="backupuser"
+DB_PASSWORD_FILE="/opt/veeam-hooks/secrets/mariadb_backup_password"
+
+BACKUP_DIR="/srv/backups/mariadb"
+STATE_DIR="/opt/veeam-hooks/state"
+
+RETENTION_DAYS="14"
+COMPRESS_DUMP="yes"
+
+FREEZE_MOUNT=""

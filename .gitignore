@@ -1,0 +1,5 @@
+config/*.conf
+secrets/*
+!*/*.example
+state/*
+!state/.gitkeep
